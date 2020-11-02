@@ -1,0 +1,20 @@
+{
+  "name": "xat_socketio",
+  "version": "1.0.0",
+  "description": "Its a chat proof of concept",
+  "main": "server .js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "socketIO",
+    "chat",
+    "websockets"
+  ],
+  "author": "Mr Evil",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
