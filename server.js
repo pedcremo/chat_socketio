@@ -2,7 +2,7 @@ const express = require('express');
 let app = express();
 const http = require('http').createServer(app);
 let io = require('socket.io')(http);
-
+const { exec } = require('child_process');
 
 app.use(express.static('public'));
 
@@ -15,7 +15,18 @@ io.on('connect', (socket) => {
         console.log('hola', data);
     });
     socket.on('newMessage', data => {
+        io.emit('chat message',data);
         console.log('new', data);
+        exec(`echo ${data} | festival --tts --language spanish`, (err, stdout, stderr) => {
+            if (err) {
+              // node couldn't execute the command
+              return;
+            }
+          
+            // the *entire* stdout and stderr (buffered)
+            console.log(`stdout: ${stdout}`);
+            console.log(`stderr: ${stderr}`);
+          });
     });
     
 });

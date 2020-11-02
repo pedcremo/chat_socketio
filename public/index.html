@@ -2,9 +2,20 @@
 
 <html>
    <head>
+      <style>
+         * { margin: 0; padding: 0; box-sizing: border-box; }
+         body { font: 13px Helvetica, Arial; }
+         .formChat { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+         input { border: 0; padding: 10px; width: 90%; margin-right: 0.5%; }
+         button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+         #chatMessages { list-style-type: none; margin: 0; padding: 0; }
+         #chatMessages li { padding: 5px 10px; }
+         #chatMessages li:nth-child(odd) { background: #eee; }
+       </style>
+
     <script src="socket.io.js"></script>
       <script type = "text/javascript">
-         let nickname = "Mr Anderson";
+         let nickname = prompt("El teu nickname", "Harry Potter");
          let DEBUG = true;
          function WebSocketChat() {              
 
@@ -17,34 +28,21 @@
                sendBtn.onclick = function(){
                 let inputMessage = document.getElementById('message');
                 socket.emit('newMessage',`${nickname}: ${inputMessage.value}`)
-               }
-               
-              
+               }                           
                
                socket.on('connect', () => {
                   socket.emit('hello',`${nickname} connected to the chat`);
                });
-               /*ws.onopen = function() {                  
-                  // Web Socket is connected, send data using send()
-                  ws.send(`${nickname} connected to the chat`);
-                  if (DEBUG) console.log(`${nickname} connected to the chat`)                  
-               };*/
-				
-               /*ws.onmessage = function (evt) { 
-                  var received_msg = evt.data;
-                  let messagesDiv=document.getElementById("chatMessages");
-                  let messageEl = document.createElement('span');
-                  messageEl.innerHTML = received_msg;
 
-                  messagesDiv.insertBefore(messageEl,messagesDiv.firstChild);
-                  if (DEBUG) console.log("Message is received...");
-               };*/
-				
-               /*ws.onclose = function() { 
+               socket.on('chat message', function(msg){                  
+                  let messagesDiv=document.getElementById("chatMessages");
+                  //let messageEl = document.createElement('span');
                   
-                  // websocket is closed.
-                  alert("Connection is closed..."); 
-               };*/
+                  messagesDiv.innerHTML = "<li>"+msg+"</li>"+ messagesDiv.innerHTML;
+                  //messagesDiv.insertBefore(messageEl,messagesDiv.firstChild);
+                  if (DEBUG) console.log("Message is received...");
+               });
+              
             } else {
               
                // The browser doesn't support WebSocket
@@ -58,10 +56,12 @@
    
    <body>
      <div id="chatMessages"> </div>
-     <input type="text" id="message" name="message" /><button id="send">SEND</button>
-
+     
+     
+      <div class="formChat"><input  id="message" autocomplete="off" /><button id="send">Send</button></div>
+    
       <script>
-          WebSocketChat();
+            WebSocketChat();
       </script>
    </body>
 </html>
