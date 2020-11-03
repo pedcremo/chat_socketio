@@ -27,14 +27,16 @@
                let sendBtn = document.getElementById('send');
                sendBtn.onclick = function(){
                 let inputMessage = document.getElementById('message');
-                socket.emit('newMessage',`${nickname}: ${inputMessage.value}`)
+                //socket.emit('newMessage',`${nickname}: ${inputMessage.value}`)
+                socket.emit('join',nickname);
+
                }                           
                
                socket.on('connect', () => {
                   socket.emit('hello',`${nickname} connected to the chat`);
                });
 
-               socket.on('chat message', function(msg){                  
+               socket.on('joined', function(msg){                  
                   let messagesDiv=document.getElementById("chatMessages");
                   //let messageEl = document.createElement('span');
                   
@@ -58,7 +60,8 @@
      <div id="chatMessages"> </div>
      
      
-      <div class="formChat"><input  id="message" autocomplete="off" /><button id="send">Send</button></div>
+      <div class="formChat">
+         <input  disabled id="message" autocomplete="off" /><button id="send">JOIN</button></div>
     
       <script>
             WebSocketChat();
