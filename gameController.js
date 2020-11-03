@@ -1,8 +1,10 @@
 
 const gameController = () => {    
     let currentGame=new Map();
-    const secsUntilBegin = 120;
+    const secsUntilBegin = 30;
+    const maxUsers = 3;
     let countDown;
+
 
     let getCurrentGame = (nickname) => {
         if (currentGame.size == 0) {
@@ -23,6 +25,12 @@ const gameController = () => {
             let listUsers = currentGame.get('listPlayers');
             listUsers.push(nickname);
             currentGame.set('listPlayers',listUsers);
+            if (listUsers.length >= maxUsers){
+               setTimeout(()=>{currentGame=new Map();
+                clearInterval(countDown);
+            },100);
+            }
+            
         }
         return {id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')}
 
