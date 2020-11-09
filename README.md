@@ -1,6 +1,1 @@
-# chat_socketio
-npm install 
-
-
-#run app
-node server.js
+# bingo_socketio

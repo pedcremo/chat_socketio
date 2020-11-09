@@ -1,70 +1,138 @@
 <!DOCTYPE HTML>
 
 <html>
-   <head>
-      <style>
-         * { margin: 0; padding: 0; box-sizing: border-box; }
-         body { font: 13px Helvetica, Arial; }
-         .formChat { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-         input { border: 0; padding: 10px; width: 90%; margin-right: 0.5%; }
-         button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-         #chatMessages { list-style-type: none; margin: 0; padding: 0; }
-         #chatMessages li { padding: 5px 10px; }
-         #chatMessages li:nth-child(odd) { background: #eee; }
-       </style>
 
-    <script src="socket.io.js"></script>
-      <script type = "text/javascript">
-         let nickname = prompt("El teu nickname", "Harry Potter");
-         let DEBUG = true;
-         function WebSocketChat() {              
+<head>
+   <style>
+      * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      body {
+         font: 13px Helvetica, Arial;
+      }
+
+      .formChat {
+         background: #000;
+         padding: 3px;
+         position: fixed;
+         bottom: 0;
+         width: 100%;
+      }
+
+      input {
+         border: 0;
+         padding: 10px;
+         width: 90%;
+         margin-right: 0.5%;
+      }
+
+      button {
+         width: 9%;
+         background: rgb(130, 224, 255);
+         border: none;
+         padding: 10px;
+      }
+
+      #chatMessages {
+         list-style-type: none;
+         margin: 0;
+         padding: 0;
+      }
+
+      #chatMessages li {
+         padding: 5px 10px;
+      }
+
+      #chatMessages li:nth-child(odd) {
+         background: #eee;
+      }
+   </style>
+
+   <script src="socket.io.js"></script>
+   <script type="text/javascript">
+      let nickname = prompt("El teu nickname", "Harry Potter");
+      let DEBUG = true;
+      function WebSocketChat() {
 
 
-            if ("WebSocket" in window) {
-               if (DEBUG) console.log("WebSocket is supported by your Browser!");
-               const socket = io();
+         if ("WebSocket" in window) {
+            if (DEBUG) console.log("WebSocket is supported by your Browser!");
+            const socket = io();
 
-               let sendBtn = document.getElementById('send');
-               sendBtn.onclick = function(){
-                let inputMessage = document.getElementById('message');
-                //socket.emit('newMessage',`${nickname}: ${inputMessage.value}`)
-                socket.emit('join',nickname);
+            let sendBtn = document.getElementById('send');
+            sendBtn.onclick = function () {
+               let inputMessage = document.getElementById('message');
+               //socket.emit('newMessage',`${nickname}: ${inputMessage.value}`)
+               socket.emit('join', nickname);
 
-               }                           
-               
-               socket.on('connect', () => {
-                  socket.emit('hello',`${nickname} connected to the chat`);
-               });
-
-               socket.on('joined', function(msg){                  
-                  let messagesDiv=document.getElementById("chatMessages");
-                  //let messageEl = document.createElement('span');
-                  
-                  messagesDiv.innerHTML = "<li>"+msg+"</li>"+ messagesDiv.innerHTML;
-                  //messagesDiv.insertBefore(messageEl,messagesDiv.firstChild);
-                  if (DEBUG) console.log("Message is received...");
-               });
-              
-            } else {
-              
-               // The browser doesn't support WebSocket
-               alert("WebSocket NOT supported by your Browser!");
             }
+
+            socket.on('connect', () => {
+               socket.emit('hello', `${nickname} connected to the chat`);
+            });
+
+            //Event triggered every time a user joins a 
+            //game where we are enrolled
+            socket.on('joined', function (msg) {
+               let messagesDiv = document.getElementById("chatMessages");
+               messagesDiv.innerHTML = "<li>" + msg + "</li>" + messagesDiv.innerHTML;
+            });
+              
+            /* Event triggered once a user joins a 
+            * game ang get a ramdom card with unique id that 
+            * should not ve shared
+            */
+            socket.on('joined_game', function (msg) {
+               let messagesDiv = document.getElementById("chatMessages");
+               console.log(msg);
+               messagesDiv.innerHTML = "<li style='background-color: red'>" + msg + "</li>" + messagesDiv.innerHTML;
+            });
+            //Event notifying starts the game
+            socket.on('starts_game', function (msg) {
+               //let messagesDiv = document.getElementById("chatMessages");
+               console.log(msg);
+               //messagesDiv.innerHTML = "";
+            });
+
+            socket.on('new_number', function (msg) {
+               let messagesDiv = document.getElementById("chatMessages");
+               console.log(msg);
+               messagesDiv.innerHTML = "NUMBER: " + msg.num + " playId="+msg.id+"<br>" + messagesDiv.innerHTML;
+            });
+            socket.on('end_game', function (msg) {               
+               console.log(msg);               
+            });
+
+         } else {
+
+            // The browser doesn't support WebSocket
+            alert("WebSocket NOT supported by your Browser!");
          }
-         
-      </script>
-		
-   </head>
-   
-   <body>
-     <div id="chatMessages"> </div>
-     
-     
-      <div class="formChat">
-         <input  disabled id="message" autocomplete="off" /><button id="send">JOIN</button></div>
-    
-      <script>
-            WebSocketChat();
-      </script>
-   </body>
+      }
+
+   </script>
+
+</head>
+
+<body>
+   <div id="chatMessages"> </div>
+
+
+   <div class="formChat">
+      <input disabled id="message" autocomplete="off" /><button id="send">JOIN</button></div>
+
+
+   <div class="gameLayout">
+      <div class="cards" id="cards" style="display: none;"></div>
+      <div id="panel" style="display: none;"></div>
+   </div>
+
+   <script>
+      WebSocketChat();
+   </script>
+</body>
+
 </html>
