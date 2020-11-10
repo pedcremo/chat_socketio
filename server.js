@@ -15,8 +15,9 @@ app.get('/', (req, res) => {
 });
 
 io.on('connect', (socket) => {
-  let pubSub = new PubSub;
-   
+    //Only one pubSub instance per socket room 
+    let pubSub = new PubSub;
+    let game;
 
     //A player wants to join a bingo game
     socket.on('join', playerName => {
@@ -34,7 +35,9 @@ io.on('connect', (socket) => {
         card:bingoCard.getMatrix()
       }
      
-      let game=gameController.getCurrentGame(card_hidden,pubSub);
+      game=gameController.getCurrentGame(card_hidden,pubSub);
+      //The most important thing. We register socket in a room 'id'
+      //that should be shared by all players on the same game
       socket.join(game.id);
 
       //SEND TO JOINED USER THE CARD WITH ID AND CHECKSUM
@@ -45,24 +48,36 @@ io.on('connect', (socket) => {
 
 
       //PUBSUB ------
-
+      //The only publisher of this event is gameController
       pubSub.subscribe("starts_game", (data) => {
         io.sockets.in(game.id).emit('starts_game',data);
         console.log("gameID="+game.id+"starts_game ->"+JSON.stringify(data))
       });
-
+      //The only publisher of this event is gameController
       pubSub.subscribe("new_number", (data) => {
         if (data != false) io.sockets.in(game.id).emit('new_number',data);
         console.log("gameID="+game.id+" new_number ->"+data.id+" "+data.num)
       });
-
+      //The publishers of this event is gameController and when bingo
+      //is shooted
       pubSub.subscribe("end_game", (data) => {
         io.sockets.in(game.id).emit('end_game',data);
       });
 
     });
 
-   
+    socket.on('bingo',playInfo =>{
+      pubSub.publish("end_game",game.id);
+      pubSub.unsubscribe('new_number');      
+      clearInterval(game.bomboTimer);
+      console.log("bingo ->"+JSON.stringify(playInfo));
+      io.sockets.in(game.id).emit('bingo_accepted',playInfo);
+    });
+
+    socket.on('linia',playInfo =>{
+      console.log("linia ->"+JSON.stringify(playInfo));
+      io.sockets.in(game.id).emit('linia_accepted',playInfo);
+    });
     
 });
 

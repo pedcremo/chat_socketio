@@ -55,6 +55,13 @@
    <script type="text/javascript">
       let nickname = prompt("El teu nickname", "Harry Potter");
       let DEBUG = true;
+      let linia = Math.round((Math.random()* 8) +1);
+      console.log(`linia when ${linia} is throwed`);
+      //let bingo = (linia==9)?8:linia+1;
+      let liniaAwarded = false;
+
+      let idCard,playInfo;
+
       function WebSocketChat() {
 
 
@@ -79,11 +86,13 @@
             socket.on('joined', function (msg) {
                let messagesDiv = document.getElementById("chatMessages");
                messagesDiv.innerHTML = "<li>" + msg + "</li>" + messagesDiv.innerHTML;
+               playInfo = JSON.parse(msg);
+              
             });
               
             /* Event triggered once a user joins a 
-            * game ang get a ramdom card with unique id that 
-            * should not ve shared
+            * game and get a ramdom card with unique id that 
+            * should not be shared
             */
             socket.on('joined_game', function (msg) {
                let messagesDiv = document.getElementById("chatMessages");
@@ -101,10 +110,32 @@
                let messagesDiv = document.getElementById("chatMessages");
                console.log(msg);
                messagesDiv.innerHTML = "NUMBER: " + msg.num + " playId="+msg.id+"<br>" + messagesDiv.innerHTML;
+               //Check if we have linia for testing purposes
+               //We had picked randomly a number between 1--9
+               //If we get it we emit linia event
+               if (msg.num == linia) {
+                  liniaAwarded = true;
+                  console.log(`emit linia ${playInfo.id} ${nickname}`);
+                  socket.emit('linia',{playId:playInfo.id,player:nickname})
+               }
+               //Once we have been awarded by a line prize we emit bingo event
+               //This and previous if obviosly should be properly implemented
+               //REMEMBER: We are now only focused on communication protocol flow               
+               if (liniaAwarded){
+                  console.log(`emit bingo ${playInfo.id} ${nickname}`)
+                  socket.emit('bingo',{playId:playInfo.id,player:nickname})
+               }
             });
             socket.on('end_game', function (msg) {               
                console.log(msg);               
             });
+            socket.on('bingo_accepted', function (msg) {  
+               console.log("bingo_accepted ->"+JSON.stringify(msg));             
+            });
+            socket.on('linia_accepted', function (msg) {         
+               console.log("linia_accepted ->"+JSON.stringify(msg));                   
+            });
+
 
          } else {
 

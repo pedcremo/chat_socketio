@@ -36,14 +36,13 @@ const gameController = () => {
                 pubSub.publish("starts_game",JSON.stringify({id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')}));
                 currentGame.set('bombo',new Bombo);                
                 let bombo = currentGame.get("bombo");
+                let bomboInterval;
                 realGame = new Map(currentGame);
-                
-                //RESET currentGame
-                currentGame = new Map(); 
+                 
 
                 gamesOnFire.set(realGame.id,realGame)
 
-                let bomboInterval = setInterval(() => {
+                bomboInterval = setInterval(() => {
                     let num = bombo.pickNumber();
                     if (num){ 
                         pubSub.publish("new_number",{id:realGame.get('id'),num:num});
@@ -53,6 +52,10 @@ const gameController = () => {
                         clearInterval(bomboInterval);
                     }
                 }, 1000);
+                
+                currentGame.set('bomboTimer',bomboInterval);
+                //RESET currentGame
+                currentGame = new Map();
 
             }, secsUntilBegin * 1000);
 
@@ -75,11 +78,14 @@ const gameController = () => {
             }
             
         }
-        return {id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')}
+        return {id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown'),bomboTimer:currentGame.get('bomboTimer')}
 
     } 
 
-    return {getCurrentGame: getCurrentGame}
+    let getGameById =(gameID) => gamesOnFire.get(realGame.id);
+    
+    return {getCurrentGame: getCurrentGame,
+            getGameById: getGameById}
 };
 
 module.exports = gameController();
