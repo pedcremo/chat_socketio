@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 
 io.on('connect', (socket) => {
     //Only one pubSub instance per socket room 
-    let pubSub = new PubSub;
+    let pubSub = new PubSub();
     let game;
 
     //A player wants to join a bingo game
@@ -36,6 +36,8 @@ io.on('connect', (socket) => {
       }
      
       game=gameController.getCurrentGame(card_hidden,pubSub);
+      //if (!game.pubSub) game.pubSub = new PubSub();
+      
       //The most important thing. We register socket in a room 'id'
       //that should be shared by all players on the same game
       socket.join(game.id);
@@ -45,7 +47,6 @@ io.on('connect', (socket) => {
 
       //SEND TO EVERY PLAYER IN THE GAME THAT NEW PLAYER HAS JOINED, AND ONLY THE CARDMATRIX and USERNAME
       io.sockets.in(game.id).emit('joined',JSON.stringify(game));
-
 
       //PUBSUB ------
       //The only publisher of this event is gameController
@@ -67,11 +68,19 @@ io.on('connect', (socket) => {
     });
 
     socket.on('bingo',playInfo =>{
-      pubSub.publish("end_game",game.id);
-      pubSub.unsubscribe('new_number');      
-      clearInterval(game.bomboTimer);
+      //game.pubSub.publish("end_game",game.id);
+      io.sockets.in(game.id).emit('end_game',game.id);
+
+      pubSub.unsubscribe('new_number');  
+      console.log("GAME INFO "+JSON.stringify(game)); 
+      //console.log("bomboTimer "+game.bomboTimer);   
+      //clearInterval(game.bomboTimer);
       console.log("bingo ->"+JSON.stringify(playInfo));
       io.sockets.in(game.id).emit('bingo_accepted',playInfo);
+      
+      //Stop throwing balls from bombo
+      let gId=gameController.getGameById(game.id);
+      clearInterval(gId.get('bomboInterval'));
     });
 
     socket.on('linia',playInfo =>{

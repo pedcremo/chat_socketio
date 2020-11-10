@@ -1,8 +1,9 @@
 let  Bombo = require('./bombo.js');
 let  bingoCard = require('./bingoCard.js');
+const PubSub = require('./pubSub.js');
 
 const gameController = () => {    
-    let currentGame=new Map();
+    let currentGame=new Map();    
     const secsUntilBegin = 10;
     const maxUsers = 3;
     let countDown;
@@ -20,7 +21,8 @@ const gameController = () => {
     * @param {cardHidden} - publish/subscriber agent
     */
 
-    let getCurrentGame = (cardHidden, pubSub) => {
+    let getCurrentGame = (cardHidden,pubSub) => {
+        let bomboInterval;
         //There's no new game. So we create a new one
         if (currentGame.size == 0) {
             currentGame.set('id',Math.round(Math.random()*10000000));
@@ -33,16 +35,15 @@ const gameController = () => {
                 //Remove countDown timer. Its's nod needed because
                 //we are going to start the game
                 clearInterval(countDown);
-                pubSub.publish("starts_game",JSON.stringify({id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')}));
+                //pubSub.publish("starts_game",JSON.stringify({id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')}));
                 currentGame.set('bombo',new Bombo);                
                 let bombo = currentGame.get("bombo");
-                let bomboInterval;
-                realGame = new Map(currentGame);
-                 
-
-                gamesOnFire.set(realGame.id,realGame)
-
+               
+                let idPlay = currentGame.get('id');
+                
                 bomboInterval = setInterval(() => {
+                    let realGame=gamesOnFire.get(idPlay)
+                    
                     let num = bombo.pickNumber();
                     if (num){ 
                         pubSub.publish("new_number",{id:realGame.get('id'),num:num});
@@ -51,9 +52,17 @@ const gameController = () => {
                         //Stop throwing balls from bombo
                         clearInterval(bomboInterval);
                     }
+                    if (!realGame.get('bomboInterval')) {
+                        realGame.set('bomboInterval',bomboInterval)
+                        console.log('Arre GAT')
+                    }
+                    console.log("bomboInterval->"+idPlay)
                 }, 1000);
                 
-                currentGame.set('bomboTimer',bomboInterval);
+                //currentGame.set('bomboTimer',bomboInterval);
+                //realGame = new Map(currentGame);
+                pubSub.publish("starts_game",JSON.stringify({id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown')})); 
+                gamesOnFire.set(currentGame.get('id'),new Map(currentGame))
                 //RESET currentGame
                 currentGame = new Map();
 
@@ -78,11 +87,11 @@ const gameController = () => {
             }
             
         }
-        return {id:currentGame.get('id'),players:currentGame.get('listPlayers'),countDown:currentGame.get('countDown'),bomboTimer:currentGame.get('bomboTimer')}
+        return {id:currentGame.get('id'),prayers:currentGame.get('listPlayers'),countDown:currentGame.get('countDown'),bomboCongo:bomboInterval}
 
     } 
 
-    let getGameById =(gameID) => gamesOnFire.get(realGame.id);
+    let getGameById =(gameID) => gamesOnFire.get(gameID);
     
     return {getCurrentGame: getCurrentGame,
             getGameById: getGameById}
